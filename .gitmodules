@@ -1,0 +1,6 @@
+[submodule "submodules/libpy"]
+	path = submodules/libpy
+	url = git@github.com:llllllllll/libpy
+[submodule "submodules/abseil-cpp"]
+	path = submodules/abseil-cpp
+	url = git@github.com:abseil/abseil-cpp
