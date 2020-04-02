@@ -419,8 +419,7 @@ public:
     }
 };
 
-struct arena_allocatable_meta_object {
-    PyHeapTypeObject head;
+struct arena_allocatable_meta_object : public PyHeapTypeObject {
     std::vector<std::shared_ptr<arena>> arena_stack;
 };
 
@@ -457,6 +456,12 @@ PyObject* new_(PyTypeObject* cls, PyObject* args, PyObject* kwargs) {
     }
     return std::move(out).escape();
 }
+
+void dealloc(PyObject* untyped_self) {
+    auto* typed_self = reinterpret_cast<arena_allocatable_meta_object*>(untyped_self);
+    typed_self->arena_stack.~vector();
+    PyType_Type.tp_dealloc(untyped_self);
+}
 }  // namespace arena_allocatable_meta_methods
 
 PyTypeObject arena_allocatable_meta_type = {
@@ -466,7 +471,7 @@ PyTypeObject arena_allocatable_meta_type = {
     "quelling_blade.arena_allocatable._ArenaAllocatableMeta",  // tp_name
     sizeof(arena_allocatable_meta_object),                     // tp_basicsize
     0,                                                         // tp_itemsize
-    0,                                                         // tp_dealloc
+    arena_allocatable_meta_methods::dealloc,                   // tp_dealloc
     0,                                                         // tp_print
     0,                                                         // tp_getattr
     0,                                                         // tp_setattr
@@ -923,7 +928,7 @@ PyModuleDef module = {PyModuleDef_HEAD_INIT,
 
 PyMODINIT_FUNC PyInit_arena_allocatable() {
     for (PyTypeObject* tp : {&arena_allocatable_meta_type,
-                             &arena_allocatable_type.head.ht_type,
+                             &arena_allocatable_type.ht_type,
                              &arena_context_type}) {
         if (PyType_Ready(tp) < 0) {
             return nullptr;
