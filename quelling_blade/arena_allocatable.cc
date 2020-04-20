@@ -1,4 +1,5 @@
 #include <deque>
+#include <functional>
 #include <memory>
 #include <sstream>
 #include <type_traits>
@@ -319,7 +320,8 @@ public:
     }
 
     bool contains(std::byte* p) const {
-        return p >= m_data.get() && p <= m_data.get() + capacity();
+        return std::greater_equal<std::byte*>{}(p, m_data.get()) &&
+               std::less_equal<std::byte*>{}(p, m_data.get() + capacity());
     }
 
     std::byte* try_allocate(std::size_t size, std::size_t align) {
