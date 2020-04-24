@@ -4,9 +4,7 @@ quelling blade (wip)
 
 Arena allocatable user defined types in Python.
 
-.. quote::
-
-   The axe of a fallen gnome, it allows you to effectively maneuver the forest.
+    The axe of a fallen gnome, it allows you to effectively maneuver the forest.
 
 What?
 =====
@@ -382,14 +380,15 @@ Arena allocatable instances are laid out in memory like:
 
 .. code-block:: c++
 
-struct arena_allocatable {
-    Py_ssize_t ob_refcnt;
-    PyTypeObject* ob_type;
-    std::shared_ptr<arena> owning_arena;
-    absl::flat_hash_map<PyObject*, PyObject*>;
-};
+   // Quelling Blade object
+   struct arena_allocatable {
+       Py_ssize_t ob_refcnt;
+       PyTypeObject* ob_type;
+       std::shared_ptr<arena> owning_arena;
+       absl::flat_hash_map<PyObject*, PyObject*>;
+   };
 
-
+   // Original PyObject
    struct PyObject {
        uintptr_t _gc_next;  /* support for the cycle detector */
        uintptr_t _gc_prev;  /* support for the cycle detector */
