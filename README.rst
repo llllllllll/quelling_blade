@@ -57,14 +57,13 @@ Slow Destruction
 A consequence of a reference counted garbage collector is that it makes deallocation of graphs expensive.
 In this context, a graph is any Python object which contains more Python objects.
 Once the root node reaches zero references, the graph must be unwound by decrementing the reference count of each of its children.
-If the node is the sole owner of any of its children, then those that node must unwind itself by decrementing the references of its own children.
+If the node is the sole owner of any of its children, then that node must unwind itself by decrementing the references of its own children.
 This can make deallocation of the graph linear in the number of nodes.
 
 Another place where this garbage collection scheme can be an issue is when latency is more important than keeping the memory usage low.
 An example of this is a webserver which takes in some input, does a small amount of processing, and returns some data to the user.
 For each request, the programmer may know that the memory cannot exceed some reasonable bound and therefore it would be safe to keep all of the temporary objects alive until the request has been served.
 Instead, CPython will spend time freeing each intermediate object along the way.
-It
 
 Arena Allocation
 ----------------
@@ -90,7 +89,7 @@ Quelling blade provides two types: ``ArenaAllocatable`` and ``Arena``.
 ``ArenaAllocatable`` subclasses behave like normal Python types with the following restrictions:
 
 - cannot use ``__slots__``
-- cannot access the ``__dict__``.
+- cannot access the ``__dict__`` directly (through ``ob.__dict__`` or ``vars(ob)``).
 
 ``Arena``
 ---------
@@ -117,7 +116,7 @@ None of the objects in the arena can be deallocated until there are no more esca
 None of the attributes of any ``ArenaAllocatable`` object will be released until the entire arena can be safely destroyed.
 When the last escaped reference is released, the entire arena will be torn down at once, freeing all memory and releasing all attributes.
 
-When quelling blade detects that some objects have been released, a ``PerformanceWarning`` will be issued with the number of escaped references.
+When quelling blade detects that some objects have been released, a ``RuntimeWarning`` will be issued with the number of escaped references.
 At this point, the programmer can attempt to debug their program to find where the objects are escaping to Python.
 
 Example Usage
@@ -327,7 +326,7 @@ If the stack is non-empty, the instance will be allocated in the arena on the to
 Slabs
 ~~~~~
 
-An _arena_ is a collection of one or more fixed-size allocations.
+An *arena* is a collection of one or more fixed-size allocations.
 Each fixed-size allocation in the arena is called a *slab*.
 Each *slab* in an arena has the same capacity.
 An arena may grow to contain an arbitrary number of slabs, but the number of slabs will never decrease.
@@ -347,7 +346,7 @@ External Objects
 In addition to slabs, each arena contains a multiset of Python object references called the *external references*.
 The entries in the external references multiset are pointers to objects that are owned by the objects that are allocated in the arena.
 For example: if a there is a Python object allocated in the arena with two attributes
-``a = 'attr`` and ``b = None``, then there will be four entries in the external references:
+``a = 'attr'`` and ``b = None``, then there will be four entries in the external references:
 
 - ``'attr'``
 - ``None``
